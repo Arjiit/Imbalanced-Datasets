@@ -10,12 +10,30 @@ splitIndex <- createDataPartition(data$Class, p = .70,
                                   list = FALSE,
                                   times = 1)
 trainSplit <- data[ splitIndex,]
+trainSplit_1 <-data[ splitIndex,]
 table(trainSplit$Class)
 testSplit <- data[-splitIndex,]
+testSplit_1<-data[-splitIndex,]
 table(testSplit$Class)
 
 
 ctrl <- trainControl(method = "cv", number = 10)
+
+
+tbmodel_1 <- train(Class ~ ., data = trainSplit_1, method = "treebag",
+                 trControl = ctrl)
+                 
+trainSplit_1$Class<-as.factor(trainSplit_1$Class)
+
+predictors_1 <- names(trainSplit_1)[names(trainSplit_1) != 'Class']
+pred_1 <- predict(tbmodel_1$finalModel, testSplit_1[,predictors_1])
+
+auc_1 <- roc(testSplit_1$Class, pred_1)
+print(auc_1)
+
+plot(auc_1, ylim=c(0,1), print.thres=TRUE, main=paste('AUC before applying SMOTE:',round(auc_1$auc_1[[1]],2)))
+
+
 
 trainSplit <- SMOTE(Class ~ ., trainSplit, perc.over = 200, perc.under=100)
 table(trainSplit$Class)
